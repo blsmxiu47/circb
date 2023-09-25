@@ -2,7 +2,7 @@
 
 circb (or "C IRC blsmxiu") is nothing yet. It will implement the IRC Protocol, or at least some important subset of it.
 
-For a more pleasant user experience and robust IRC, please see [TKTK](have not developed this yet), which is an IRC built in ??Rust, ??Zig, not sure yet. circb was originally a way for me to get my feet wet (again) with the C langauge after job hunting and trying to appease the Javascript/frontend framework gods.
+For a more pleasant user experience and robust IRC, please see [TKTK](have not developed this yet), which is an IRC built in ??Go, ??Rust, ??Zig, not sure yet; guessing my prefs will change over time. circb was originally a way for me to get my feet wet (again) with the C langauge after job hunting and trying to appease the Javascript/frontend framework gods.
 
 ## While in development
 
@@ -12,6 +12,17 @@ Some things to note:
 
 ## Features
 * TKTK
+
+## WIP structure considerations
+* src/
+  * components/
+  * handlers/
+  * tests/
+  * utils/
+  * draw
+  * io
+  * state.c
+  * circb.c
 
 
 ## In addition I hope to add........
