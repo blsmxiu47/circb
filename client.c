@@ -35,7 +35,6 @@ int main(int argc, char const* argv[])
 	// Network byte order should just refer to big-endian, which is the endianness used as standard by TCP/IP
 	serv_addr.sin_port = htons(PORT);
 
-	// Convert IPv4 and IPv6 addresses from text to binary form.
 	// int inet_pton(int af, const char *restrict src, void *restrict dst): This function converts the character string src into a network 
 	// address structure in the address family specified in first arg `af`, then copies the network address 
 	// structure to dst (destination). The af argument must be either AF_INET or AF_INET6 (because that is what happens to be currently supported. not sure why). dst is written in network byte order. 
@@ -43,7 +42,7 @@ int main(int argc, char const* argv[])
 	// Below,,,
 	//   * af: AF_INET - IPv4 Internet protocols 
 	//   * src: localhost
-	//   * dst: ref to whatever the sin_addr from serv_addr struct is. Assuming this is the address for the server itself
+	//   * dst: ref to the sin_addr member from serv_addr struct. Assuming this is the address for the server itself. So this is where the converted network address will go.
 	//   Again in this case, if inet_pton() returns -1, then print the error message
 	if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)
 		<= 0) {
@@ -51,7 +50,18 @@ int main(int argc, char const* argv[])
 			"\nInvalid address/ Address not supported \n");
 		return -1;
 	}
-
+	// Try initiating connection on socket. If error, print message.
+	// int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+	//   * sockfd: client_fd - file descriptor of the socket in question
+	//   * *addr: pointer to serv_addr, which contains the destination address and 
+	//   port by this point (e.g. 127.0.0.1:8080, but it's a struct with the information 
+	//   included in a sockaddr_in struct), and this is cast as sockaddr from sockaddr_in. 
+	//   sockaddr is a generic descriptor for any kind of socket operation, whereas sockaddr_in 
+	//   is a struct specific to IP-based communication (IIRC, "in" stands for "InterNet"). As far as 
+	//   I know, this is a kind of "polymorphism" : the bind() function pretends to take a struct sockaddr *, 
+	//   but in fact, it will assume that the appropriate type of structure is passed in; i. e. one that 
+	//   corresponds to the type of socket you give it as the first argument."
+	//   * addrlen: size of addr. (Why is this needed? Do you ever set this to anything other than the size of the prev arg? Probably only in cases where for whatever reason the second arg for address is more than just the address, like a struct containing address struct as a member inside it, with additional members that should not be counted in sizeof, though atm not sure of a good example of this)
 	if ((status
 		= connect(client_fd, (struct sockaddr*)&serv_addr,
 				sizeof(serv_addr)))
@@ -59,13 +69,29 @@ int main(int argc, char const* argv[])
 		printf("\nConnection Failed \n");
 		return -1;
 	}
+	// ssize_t send(int socket, const void *buffer, size_t length, int flags);
+	// Send the message
+	//   * socket: client_fd - again, file descriptor of the socket in question
+	//   * *buffer: hello - char* pointer to the buffer containing text that we want to send
+	//   * length: number of bytes in our char* hello
+	//   * flags: 0 - specifies the type of message transmission. There are a few possible flags, and 0 for none of them
+	// Returns the number of bytes sent if successful, or -1 if error
 	send(client_fd, hello, strlen(hello), 0);
-	printf("Hello message sent\n");
+	printf("Client sent: %s\n", hello);
+	// ssize_t read(int fd, void buf[.count], size_t count);
+	// read() attempts to read up to count bytes from file descriptor fd into the buffer starting at buf.
+	//   * fd: client_fd - again, file descriptor of the socket in question
+	//   * buf[.count]: buffer - our array of 1024 0s at this point
+	//   * count: 1024, maximum number of bytes to read. This is the length of buffer in this case
 	valread = read(client_fd, buffer, 1024);
-	printf("%s\n", buffer);
+	// print out the contents of buffer
+	printf("Client Received: %s\n", buffer);
 
 	// closing the connected socket
+	// int close(int fd);
+	// returns 0 on success and -1 on error (e.g. invalid fd)
 	close(client_fd);
+	printf("Client socket closed\n");
 	return 0;
 }
 
