@@ -1,0 +1,11 @@
+#ifndef RIRC_COMPONENTS_USER_H
+#define RIRC_COMPONENTS_USER_H
+
+enum user_err
+{
+	USER_ERR_DUPLICATE = -2,
+	USER_ERR_NOT_FOUND = -1,
+	USER_ERR_NONE
+};
+
+#endif
