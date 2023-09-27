@@ -1,29 +1,57 @@
-# circb: An IRC client written in C
+# circb: An IRC (Internet Relay Chat) system, written in C
 
-circb (or "C IRC blsmxiu") is nothing yet. It will implement the IRC Protocol, or at least some important subset of it.
+circb (or "C IRC blsmxiu", because clearly I'm great at naming things) is (will be) an IRC network, with support for many servers, channels, and users, and following [the IRC protocol (RFC 1459)](https://www.rfc-editor.org/rfc/rfc1459.html).
 
-For a more pleasant user experience and robust IRC, please see [TKTK](have not developed this yet), which is an IRC built in ??Go, ??Rust, ??Zig, not sure yet; guessing my prefs will change over time. circb was originally a way for me to get my feet wet (again) with the C langauge after job hunting and trying to appease the Javascript/frontend framework gods.
+For a more robust chat app and pleasant user experience (including UI), please see [TKTK](have not developed this yet), which is a product I will develop in ??Go, ??Rust, ??Zig, not sure yet; guessing my prefs will change over time.
 
 ## While in development
 
-Some things to note:
+*Some things to note:*
 * When looking at the commit history for this repo there may be a lot of backtracking and trail and error over time. I enjoy learning (shamelessly) as I gradually make progress toward some eventual product that no one will ever use. Most likely some components will be developed only to be removed later entirely; all part of the process though ^^
-* Will clean up the finished product if I ever get there, but until then I may chat with myself in comments, etc. All due apologies.
+* Will clean up the finished product if I ever get there, but until then I may chat with myself in comments, this README, etc. All due apologies.
 
 ## Features
+
 * TKTK
 
 ## WIP structure considerations
-* src/
-  * components/
-  * handlers/
-  * tests/
-  * utils/
-  * draw
-  * io
-  * state.c
-  * circb.c
 
+```
+├── src
+│   ├── components
+│   │   ├── *.c
+│   ├── handlers 
+│   ├── utils
+├── include
+│   │   ├── *.h
+├── tests
+```
+
+## Interaction Protocols
+
+For now, this project follows the IRC protocol more or less, though specific component interactions and commands may differ. For full details of circb's available commands and protocol please see the [circb Interaction Protocol Google Sheet](https://docs.google.com/spreadsheets/d/1ZwGiwEt0Bo0nahpE2eTKUP_niFaKW3wwh9WVr5oVtIc).
+
+For example,
+```
+    Command: JOIN
+    Format: JOIN <#channel>
+    Sender: Client/User
+    Receiver: Server
+    Actions:
+        Server:
+            * Validate the command format.
+            * Check if the channel exists.
+            * Add the user to the channel's user list.
+            * Send acknowledgment to the user.
+            * Notify other users in the channel.
+        Client/User:
+            * Send the properly formatted command to the server.
+            * Wait for acknowledgment.
+            * Update local state upon acknowledgment.
+    Error Handling:
+        * If the channel doesn’t exist, return an error to the sender.
+        * If the command format is invalid, return an error to the sender.
+```
 
 ## In addition I hope to add........
 
