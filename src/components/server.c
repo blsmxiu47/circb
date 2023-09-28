@@ -1,11 +1,62 @@
 // Sample TCP Server
 #include <netinet/in.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include "../../include/server.h"
+
 #define PORT 8080
+#define MAX_CLIENTS 64
+
+void *handle_client(void *client_sock) {
+    int sock = *((int *)client_sock);
+    // The free() function shall cause the space pointed to by ptr to be 
+    // deallocated; that is, made available for further allocation. 
+    // If ptr is a null pointer, no action shall occur.
+    // So, ensures there is memory space for sock in advance
+    free(client_sock);
+
+    // TODO: read and write to the client socket, and implement IRC protocol.
+
+    close(sock);
+    // from p_thread.h
+    // The pthread_exit() function terminates the calling thread and 
+    // returns a value via retval (NULL here) that (if the thread is joinable) is 
+    // available to another thread in the same process that calls pthread_join(3).
+    // TODO: for the sake of learning, understand what this is doing more thoroughly
+    pthread_exit(NULL);
+}
+
+// from server.h
+Server* init_server(char* hostname, int port) {
+    Server *server = malloc(sizeof(Server));
+    // malloc returns a pointer to the block of memory that has been allocated for dynamic memory 
+    // usage (as opposed to static or automatic)
+    // With dynamic memory usage, when the memory is no longer needed, the pointer 
+    // is passed to free which deallocates the memory so that it can be used for other purposes. 
+    // Using dynamic memory allocation it is possible to fail to allocate memory,
+    // for instance if there is simply not enough memory available
+    // TODO: handle this issue more tactfully I assume.
+    if (!server) {
+        perror("Failed to allocate memory for Server");
+        exit(EXIT_FAILURE);
+    }
+    // The strdup() function returns a pointer to a new string which is a duplicate of the 
+    // string s.  Memory for the new string is obtained with malloc(3), and can 
+    // be freed with free(3).
+    // Essentially, strdup() does 2 things: 1. allocates enough memory to hold the contents
+    // of the string pointed to by hostname, including the null terminator, and 2. copies 
+    // the contents of the string hostname into this newly allocated memory block.
+    server->hostname = strdup(hostname); // Remember to free this during server shutdown.
+    // And port is simply assigned to the port member of server
+    server->port = port;
+    // Initialize other server state information here.
+    // TODO: tktk
+    return server;
+}
 
 int main(int argc, char const* argv[])
 {
