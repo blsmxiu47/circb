@@ -27,6 +27,50 @@ For a more robust chat app and pleasant user experience (including UI), please s
 ├── tests
 ```
 
+## Components and Interactions
+
+* Server (server.c)
+* Client (user.c, operator.c, chop.c)
+  *   The commands which may only be used by channel operators are:
+        ```
+        KICK    - Eject a client from the channel
+        MODE    - Change the channel's mode
+        INVITE  - Invite a client to an invite-only channel (mode +i)
+        TOPIC   - Change the channel topic in a mode +t channel
+        ```
+* Channel
+
+## Configuration File
+
+The configuration file required for starting an instance of circb has some requirements that may differ from those of other popular IRCs.
+
+**Configuration File Parameters**
+(required)
+```
+    nodeID       -
+    hostname     -
+    local-port   -
+    routing-port -
+    IRC-port     -
+    TKTK         -
+```
+
+(optional)
+```
+    TKTK -
+    TKTK -
+```
+
+**Sample Configuration File**
+```
+// node1.conf
+TKTK
+TKTK
+TKTK
+```
+
+
+
 ## Interaction Protocols
 
 For now, this project follows the IRC protocol more or less, though specific component interactions and commands may differ. For full details of circb's available commands and protocol please see the [circb Interaction Protocol Google Sheet](https://docs.google.com/spreadsheets/d/1ZwGiwEt0Bo0nahpE2eTKUP_niFaKW3wwh9WVr5oVtIc).
