@@ -9,7 +9,6 @@
 #include "../../include/server.h"
 
 #define PORT 8080
-#define MAX_CLIENTS 64
 
 void *handle_client(void *client_sock) {
     int sock = *((int *)client_sock);
@@ -131,6 +130,14 @@ void start_server(Server* server) {
             perror("accept");
             continue;
         }
+	// TODO: I think we're going to be using poll or epoll (and if not, then select. But 
+	// select is limited for modern apps due to 1024 (or 1023?) fds per server.. Check out 
+	// the theoretical O() complexity of each. poll options just seem superior to select(). 
+	// epoll() has additional customization options and functionality over poll(), though is 
+	// linux-specific. epoll() is also technically a group of 3 APIs as oppoosed to just 1 
+	// each for select() and poll(). epoll() also appears to simply have efficiency 
+	// improvements over poll(). The above all really may not matter for my use case, but 
+	// probably better to practice with tools we'd use in real life)
 	// TODO: Annotations
         pthread_t thread_id;
 	// TODO: Annotations
@@ -155,9 +162,8 @@ int main() {
     Server* server = init_server(hostname, port);
     start_server(server);
     // TODO: Handle signals to stop the server gracefully.
-    // TODO: also remember freeing memory
-    // free(server->hostname);
-    // free(server);
+    // stop_server(server);
+
     return 0;
 }
 
