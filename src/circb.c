@@ -19,6 +19,21 @@ Config init_config() {
     return config;
 }
 
+static const char *const circb_help =
+	"circb"
+	"\n"
+	"Usage:"
+	"\n  rirc [-h] [[options] ...]"
+	"\n"
+	"\nInfo:"
+	"\n  -h, --help      		Print help message and exit"
+	"\n"
+	"\nOptions:"
+	"\n  -s, --server=HOSTNAME     	Set connection hostname"
+	"\n  -p, --port=PORT           	Set connection port"
+	"\n  -w, --password=PASSWORD   	Set IRC password"
+	"\n  -u, --username=USERNAME   	Set IRC username";
+
 Config parse_args (int argc, char *argv[]) {
 	Config config = init_config();
 	int opt;
@@ -26,7 +41,7 @@ Config parse_args (int argc, char *argv[]) {
     	while((opt = getopt(argc, argv, "h:s:p:u:w:")) > 0) {
         	switch(opt) {
             		case 'h':
-                		printf("Help Message\n");
+				puts(circb_help);
                 		exit(0);
                 		break;
         		case 's':
