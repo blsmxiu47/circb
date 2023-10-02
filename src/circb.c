@@ -29,10 +29,59 @@ static const char *const circb_help =
 	"\n  -h, --help      		Print help message and exit"
 	"\n"
 	"\nOptions:"
+	"\n  -c  --config=CONFIG_FILE   Define path to config file containing options"
 	"\n  -s, --server=HOSTNAME     	Set connection hostname"
 	"\n  -p, --port=PORT           	Set connection port"
 	"\n  -w, --password=PASSWORD   	Set IRC password"
 	"\n  -u, --username=USERNAME   	Set IRC username";
+
+Config parse_config_file(const char *filename) {
+	FILE* file = fopen(filename, "r");
+	Config config = init_config();
+
+	// If there is issue opening file
+	if (file == NULL) {
+        	perror("Error opening config file");
+        	exit(EXIT_FAILURE);
+	}
+
+	// init a buffer variable for reading lines
+	char line[256];
+
+	// loop over lines in config file
+	while (fgets(line, sizeof(line), file)) {
+		// Grabbing key = value pairs
+        	char* key = strtok(line, "=");
+        	char* value = strtok(NULL, "\n");
+
+		// If either key or value is null, throw error
+        	if (key == NULL || value == NULL) {
+            		fprintf(stderr, "Error parsing line: %s\n", line);
+            		fclose(file);
+            		exit(EXIT_FAILURE);
+        	}
+
+		// Grab values for each key of interest, one-by-one
+        	if (strcmp(key, "hostname") == 0) {
+            		config.hostname = strdup(value);
+        	} else if (strcmp(key, "port") == 0) {
+            		config.port = atoi(value);
+        	} else if (strcmp(key, "username") == 0) {
+			config.username = strdup(value);
+		} else if (strcmp(key, "password") == 0) {
+			config.password = strdup(value);
+		}
+	}
+
+    	if (ferror(file)) {
+        	perror("Error reading from config file");
+        	fclose(file);
+        	exit(EXIT_FAILURE);
+    	}
+
+    	fclose(file);
+    	return config;
+}
 
 Config parse_args (int argc, char *argv[]) {
 	Config config = init_config();
@@ -44,6 +93,9 @@ Config parse_args (int argc, char *argv[]) {
 				puts(circb_help);
                 		exit(0);
                 		break;
+			case 'c':
+				config = parse_config_file(optarg);
+				break;
         		case 's':
                 		config.hostname = strdup(optarg);
                 		break;
