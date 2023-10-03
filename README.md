@@ -105,6 +105,10 @@ The following functionality. But have not yet gotten to it.
   * B
   * C
   * etc...
+* Features of note(??)
+  * Smart handling of race conditions
+  * Flood control of clients
+  * emdemd
 
 ## Getting Started
 
