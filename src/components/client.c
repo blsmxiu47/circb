@@ -1,11 +1,96 @@
-// Sample Client
-#include <arpa/inet.h>
+#include "../../include/client.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 #define PORT 8080
 
+Client* init_client(const char* hostname, int port) {
+    	// allocate memory for client object
+	Client* client = malloc(sizeof(Client));
+	// TODO: likely raise to caller
+    	if (!client) {
+        	perror("Failed to allocate memory for client");
+        	exit(EXIT_FAILURE);
+    	}
+	
+	// set client members
+	// hostname comes from argument (specified by user originially)
+    	client->server_hostname = strdup(hostname);
+	// same with port
+    	client->server_port = port;
+	// init socket file descriptor to -1 as it is not yet connected
+    	client->socket_fd = -1;
+    	
+    	return client;
+}
+
+int connect_to_server(Client* client) {
+	struct sockaddr_in server_address;
+
+	// catch any errors creating a new socket for the client
+	if ((client->socket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        	perror("Socket creation failed");
+        	return -1;
+    	}
+
+    	server_address.sin_family = AF_INET;
+    	server_address.sin_port = htons(client->server_port);
+    	// inet_pton returns 1 on success, 0 if `src` does not contain a character
+	// string representing a valid network address in the specified address family,
+	// and -1 if `af` does not contain a valid address family
+	if (inet_pton(AF_INET, client->server_hostname, &server_address.sin_addr) <= 0) {
+        	perror("Invalid address/Address not supported");
+        	return -1;
+    	}
+
+	// try connecting client to server via our new socket
+	if (connect(client->socket_fd, (struct sockaddr*)&server_address, sizeof(server_address)) < 0) {
+		perror("Connection failed");
+		return -1;
+	}
+
+	return 0;
+}
+
+// ssize_t send(int socket, const void *buffer, size_t length, int flags);
+// Send the message
+//   * socket: client_fd - again, file descriptor of the socket in question
+//   * *buffer: hello - char* pointer to the buffer containing text that we want to send
+//   * length: number of bytes in our char* hello
+//   * flags: 0 - specifies the type of message transmission. There are a few possible flags, and 0 for none of them
+// Returns the number of bytes sent if successful, or -1 if error	
+int send_message(Client* client, const char* message) {
+	return send(client->socket_fd, message, strlen(message), 0);
+}
+
+char* receive_message(Client* client) {
+	// this buffer gets reused across calls
+	static char buffer[1024];
+	// TODO: annotations
+	memset(buffer, 0, sizeof(buffer));
+    
+	// TODO: annotations
+    	int bytes_received = recv(client->socket_fd, buffer, sizeof(buffer) - 1, 0);
+    	if (bytes_received < 0) {
+        	perror("Receive failed");
+        	return NULL;
+    	}
+
+	return buffer;
+}
+
+// TODO: annotations
+void close_client(Client* client) {
+	close(client->socket_fd);
+	free(client->server_hostname);
+	free(client);
+}
+
+
+// TODO: refactor this main() fn since we're gradually moving everything into the functions above
 int main(int argc, char const* argv[])
 {
 	// initialize vars for connection status, the value that gets read from client file descriptor, and the client file descriptor tself
