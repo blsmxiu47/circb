@@ -122,6 +122,12 @@ int main(int argc, char *argv[]) {
 	// TODO: Initialization of other components, IO, State, etc.
 	// TODO: logic to start/connect to the server/client with the parsed config
 	
+	printf("Config parameters supplied\n");
+	printf("hostname: %s\n", config.hostname);
+	printf("port: %d\n", config.port);
+	printf("username: %s\n", config.username);
+	// below, safest code ever
+	printf("password!!: %s\n", config.password);
 	free(config.hostname);
 	free(config.username);
 	free(config.password);
