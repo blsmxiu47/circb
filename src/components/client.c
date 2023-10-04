@@ -1,11 +1,14 @@
-#include "../../include/client.h"
+#include <poll.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include "../../include/client.h"
+
 #define PORT 8080
+#define MAX_MESSAGE_SIZE 1024
 
 Client* init_client(const char* hostname, int port) {
     	// allocate memory for client object
@@ -132,7 +135,7 @@ void close_client(Client* client) {
 	free(client);
 }
 
-int main (int argc, char const* argv[]) {
+int main (int argc, char* argv[]) {
 	// TODO: not necessarily assuming command line args are given for the 
 	// foirst time I think this will be okay but we should be prepped 
 	// for the future when making this more flecible for other use cases
@@ -142,7 +145,10 @@ int main (int argc, char const* argv[]) {
 
 	// init client - allocates memory and sets hostname, port, inits socket to -1 for now
 	Client* client = init_client(hostname, port);
-
+	printf("Server hostname: %s\n", client->server_hostname);
+	printf("Server port: %d\n", client->server_port);
+	printf("Client socket: %d\n", client->socket_fd);
+	
 	// try connecting to the server, return failure if non-zero code returned
 	if (connect_to_server(client) != 0) {
 		fprintf(stderr, "Failed to connect to server\n");
@@ -150,13 +156,78 @@ int main (int argc, char const* argv[]) {
 		return EXIT_FAILURE;
 	}
 
+	// Below, loop for enabling continuous read and write operations, i.e.
+	// allowing users to send and receive messages freely
+	// Using `poll()`... init fds with length of 2
+	// The set of file descriptors to be monitored is specified in the 
+	// fds argument, which is an array of structures of the following form:
+        //   struct pollfd {
+        //       int   fd;         /* file descriptor */
+        //       short events;     /* requested events */
+        //       short revents;    /* returned events */
+        //   };
+	struct pollfd fds[2];
+	// Standard input (user input)
+	fds[0].fd = STDIN_FILENO;
+	// There is data to read
+	fds[0].events = POLLIN;
+	// Socket
+	fds[1].fd = client->socket_fd;
+	// There is data to read
+	fds[1].events = POLLIN;
+
+	// set limit on message size
+	char message[MAX_MESSAGE_SIZE];
+	int should_run = 1;
+
+	printf("Connected to server. Type /disconnect to exit.\n");
+
+	while (should_run) {
+		// -1 means no timeout, wait indefinitely (or rather, until told otherwise)
+		// int poll(struct pollfd *fds, nfds_t nfds, int timeout);
+		int poll_count = poll(fds, 2, -1);
+		// peace out if poll() returns error
+		if (poll_count == -1) {
+			perror("poll");
+			break;
+		}
+
+		// If there is user input (first file descriptor)
+		if (fds[0].revents & POLLIN) {
+			fgets(message, MAX_MESSAGE_SIZE, stdin);
+
+			// Check if user wants to disconnect
+            		if (strncmp(message, "/disconnect", 11) == 0) {
+                		should_run = 0;
+                		break;
+            		}
+			
+			// actually try sending the message specified by user
+            		send_message(client, message);
+		}
+
+		// If there is activity from the server (via socket, second file descriptor)
+		if (fds[1].revents & POLLIN) {
+			// get response from client (using `recv()`)
+			char* response = receive_message(client);
+            		if (response) {
+				// if non-null, print so that user can see it
+                		printf("Server: %s\n", response);
+            		} else {
+				// otherwise, notify that server is not connected via socket and break
+                		printf("Server disconnected.\n");
+                		should_run = 0;
+                		break;
+            		}
+		}
+	}
 	// Sample communication for testing..
 	// TODO: rm
-	// send_message(client, "Hello, Server!");
+	//send_message(client, "Hello, Server!");
+	// TODO: failing in the recv() call here atm, returns null response
 	// char* response = receive_message(client);
     	// printf("Received from server: %s\n", response);
-	
-	close_client(client);
+	// close_client(client);
 
 	return EXIT_SUCCESS;
 }
