@@ -1,6 +1,7 @@
 typedef struct server {
     char* hostname;
     int port;
+    int socket_fd;
     // TODO: Other state information like connected clients, channels, etc.
 } Server;
 
