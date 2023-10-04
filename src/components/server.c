@@ -33,6 +33,7 @@ void handle_client(int client_fd) {
     	// For now, simply just echoing back the message for the sake
 	// of testing
     	send(client_fd, buffer, bytes_read, 0);
+	printf("Echoed message\n");
 }
 
 // from server.h
@@ -81,24 +82,80 @@ Server* init_server(char* hostname, int port) {
 
 
 void start_server(Server* server) {
+	// init IPv4 address for server socket
+	struct sockaddr_in address;
+	// Argument for bind(), accept()
+	int addrlen = sizeof(address);
+	// options
+	int opt = 1;
+
+	// CREATE
+	// Creating socket file descriptor...
+	if ((server->socket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+		perror("socket failed");
+		exit(EXIT_FAILURE);
+	}
+
+	// int setsockopt(int socket, int level, int option_name, const void *option_value, socklen_t option_len);
+	//   * socket: server->socket_fd - file descriptor of our server socket
+	//   * level: SOL_SOCKET - set connections at the socket level
+	//   * option_name: SO_REUSEADDR | SO_REUSEPORT - option that we want to set
+	//   * *option_value: &opt - in this case it is 1. So allow reuse of addr or(?) port
+	//   * option_len: sizeof(opt) - length of opt. Still dont understand why these len args are always required
+	// setsocketopt() should return 0 on success, -1 on failure
+	// Attempting to set multiple options in one line here. Check back if issues arise
+	// if (setsockopt(server->socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+	//	   perror("setsockopt");
+	//	   exit(EXIT_FAILURE);
+	// }
+	// if (setsockopt(server->socket_fd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt)) < 0) {
+	//	   perror("setsockopt");
+	//	   exit(EXIT_FAILURE);
+	// }
+
+	address.sin_family = AF_INET;
+	// set address of address's address to INADDR_ANY, or bind to all available interfaces, not specific one
+	address.sin_addr.s_addr = INADDR_ANY;
+	address.sin_port = htons(server->port);
+
+	// BIND
+	// Forcefully attaching socket to the port 8080
+	// bind() assigns the address specified by addr to the socket referred to by the file descriptor sockfd
+	// int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+	// ((see client.c for arg annotations))
+	if (bind(server->socket_fd, (struct sockaddr*)&address, addrlen) < 0) {
+		perror("bind failed");
+		exit(EXIT_FAILURE);
+	}
+	// int listen(int sockfd, int backlog);
+	//   * backlog: 10 - The backlog argument defines the maximum length to which the queue of pending connections for sockfd may grow
+	if (listen(server->socket_fd, 10) < 0) {
+		perror("listen");
+		exit(EXIT_FAILURE);
+	}
+	printf("Server is listening on port %d...\n", server->port);
+	
 	// +1 for the main listening socket
+	// TODO: !! we cant get the following or anything after atm
+	printf("Max clients set to: %d\n", MAX_CLIENTS);
 	struct pollfd fds[MAX_CLIENTS + 1];
 	// Start with the main socket
-    	int num_fds = 1;
-
-    	// File descriptor of main listening socket for client connection (index 0)
+	int num_fds = 1;
+	printf("Logging num_fds: %d\n", num_fds);
+	// File descriptor of main listening socket for client connection (index 0)
 	fds[0].fd = server->socket_fd;
 	// data to read
-    	fds[0].events = POLLIN;
+	fds[0].events = POLLIN;
 
 	// loop to handle continuous handling of clients 
 	// (in this case the only limit on the number of 
 	// clients is hardware resources and the limit 
 	// set in MAX_CLIENTS
-    	while (1) {
+	while (1) {
 		// third arg -1 for no timeout
-        	int poll_count = poll(fds, num_fds, -1);
-        	if (poll_count == -1) {
+		int poll_count = poll(fds, num_fds, -1);
+		printf("poll_count: %d\n", poll_count);
+		if (poll_count == -1) {
 			perror("poll");
 			break;
 		}
@@ -106,6 +163,7 @@ void start_server(Server* server) {
 		// Looping over all the file descriptors, up to the limit 
 		// specified in MAX_CLIENTS (+1 for the main listening socket)
 		for (int i = 0; i < num_fds; i++) {
+			printf("Logging num_fds: %d\n", num_fds);
 			// if there is input to be had associated with this file descriptor 
 			if (fds[i].revents & POLLIN) {
 				// if the current file descriptor matches the connection to client
@@ -115,6 +173,11 @@ void start_server(Server* server) {
 					struct sockaddr_in client_address;
 					socklen_t client_len = sizeof(client_address);
 					// try to begin accepting connections on this socket
+					// Set up new_socket to accept connections
+					// int accept(int sockfd, struct sockaddr,*_Nullable restrict addr, socklen_t *_Nullable restrict addrlen);
+					// accept() extracts the first connection request on the queue of pending connections for the listening socket, sockfd,
+					// creates a new connected socket, and returns a new file descriptor referring to that socket.  The newly created socket 
+					// is not in the listening state.  The original socket sockfd is unaffected by this call.
 					int new_client_fd = accept(server->socket_fd, (struct sockaddr*)&client_address, &client_len);
 					if (new_client_fd == -1) {
 						perror("accept");
@@ -131,78 +194,16 @@ void start_server(Server* server) {
 					// the current item in `fds` to the newly created connection
 					fds[num_fds].fd = new_client_fd;
 					// and set the events member to POLLIN (readiness to read)
-                    			fds[num_fds].events = POLLIN;
+					fds[num_fds].events = POLLIN;
 					// increment the counter for fds
-                    			num_fds++;
+					num_fds++;
 				} else {
 					// case when existing client sent a message
-                    			handle_client(fds[i].fd);
+					handle_client(fds[i].fd);
 				}
 			}
 		}
 	}
-
-   //int opt = 1;
-
-    // CREATE
-    // Creating socket file descriptor...
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-	perror("socket failed");
-	exit(EXIT_FAILURE);
-    }
-
-    // int setsockopt(int socket, int level, int option_name, const void *option_value, socklen_t option_len);
-    //   * socket: server_fd - file descriptor of our server socket
-    //   * level: SOL_SOCKET - set connections at the socket level
-    //   * option_name: SO_REUSEADDR | SO_REUSEPORT - option that we want to set
-    //   * *option_value: &opt - in this case it is 1. So allow reuse of addr or(?) port
-    //   * option_len: sizeof(opt) - length of opt. Still dont understand why these len args are always required
-    // setsocketopt() should return 0 on success, -1 on failure
-    // Attempting to set multiple options in one line here. Check back if issues arise
-    // if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
-    //	   perror("setsockopt");
-    //	   exit(EXIT_FAILURE);
-    // }
-    // if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt)) < 0) {
-    //	   perror("setsockopt");
-    //	   exit(EXIT_FAILURE);
-    // }
-
-    address.sin_family = AF_INET;
-    // set address of address's address to INADDR_ANY, or bind to all available interfaces, not specific one
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(server->port);
-
-    // BIND
-    // Forcefully attaching socket to the port 8080
-    // bind() assigns the address specified by addr to the socket referred to by the file descriptor sockfd
-    // int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
-    // ((see client.c for arg annotations))
-    if (bind(server_fd, (struct sockaddr*)&address, addrlen) < 0) {
-        perror("bind failed");
-        exit(EXIT_FAILURE);
-    }
-    // int listen(int sockfd, int backlog);
-    //   * backlog: 10 - The backlog argument defines the maximum length to which the queue of pending connections for sockfd may grow
-    if (listen(server_fd, 10) < 0) {
-        perror("listen");
-        exit(EXIT_FAILURE);
-    }
-    printf("Server is listening on port %d...\n", server->port);
-
-    // Set up new_socket to accept connections
-    // int accept(int sockfd, struct sockaddr,*_Nullable restrict addr, socklen_t *_Nullable restrict addrlen);
-    // accept() extracts the first connection request on the queue of pending connections for the listening socket, sockfd,
-    // creates a new connected socket, and returns a new file descriptor referring to that socket.  The newly created socket 
-    // is not in the listening state.  The original socket sockfd is unaffected by this call.
-    while (1) {
-	// new socket to accept connections (created from but will be separate from server_fd)
-        int *new_sock = malloc(sizeof(int));
-        if ((*new_sock = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
-            perror("accept");
-            continue;
-        }
-    }
 }
 
 void stop_server(Server* server) {
@@ -227,26 +228,3 @@ int main() {
 
     return 0;
 }
-
-
-// int main(int argc, char const* argv[])
-// {
-	// char buffer[1024] = { 0 };
-	// char* hello = "Hello from server";
-
-	// Try reading from the new socket accepting connections to buffer
-	// valread = read(new_socket, buffer, 1024);
-	// printf("Server received: %s\n", buffer);
-	// Echo back the received message
-	// send(new_socket, buffer, strlen(buffer), 0);
-	// printf("Server sent: %s\n", buffer);
-
-	// closing the connected socket
-	// close(new_socket);
-	// printf("Server socket closed\n");
-	// closing the listening socket
-	// shutdown(server_fd, SHUT_RDWR);
-	// printf("Server shutdown\n");
-	// return 0;
-// }
-
