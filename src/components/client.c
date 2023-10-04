@@ -167,13 +167,13 @@ int main (int argc, char* argv[]) {
         //       short revents;    /* returned events */
         //   };
 	struct pollfd fds[2];
-	// Standard input (user input)
+	// standard input (user input)
 	fds[0].fd = STDIN_FILENO;
-	// There is data to read
+	// data to read
 	fds[0].events = POLLIN;
-	// Socket
+	// socket of connection to server
 	fds[1].fd = client->socket_fd;
-	// There is data to read
+	// data to read
 	fds[1].events = POLLIN;
 
 	// set limit on message size
