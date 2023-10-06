@@ -10,6 +10,25 @@ For a more robust chat app and pleasant user experience (including UI), please s
 * When looking at the commit history for this repo there may be a lot of backtracking and trail and error over time. I enjoy learning (shamelessly) as I gradually make progress toward some eventual product that no one will ever use. Most likely some components will be developed only to be removed later entirely; all part of the process though ^^
 * Will clean up the finished product if I ever get there, but until then I may chat with myself in comments, this README, etc. All due apologies.
 
+## Dev TODOs
+
+* implement graceful server shutdown
+* define strategy and be ready to implement for handling of errors, management of state, I/O, and concurrency
+* implement first "basic" IRC commands requiring only server/client (maybe NICK, USER)
+* create bare bones channel component
+* implement second set of "basic" commands (e.g. JOIN, PART); test functioning channel using a single server with multiple users joined
+* implement server linking, enable message propogation btw servers, start testing with multiple servers
+* start `docs/`; begin `circb` documentation
+* write unit tests for first commands
+* implement testing framework (from scratch, start small)
+* finish implementing the set of "basic" commands, including testing
+* set up foundation and start documentation for organized unit, integration, and end-to-end testing
+* implement additional sub-component types such as operators and channel operators
+* implement user auth
+* implement and document security protocol
+* perform stress testing on "basic" setup; simulate introduction of bad actors
+* implement additional commands and features outside the scope of the original IRC (what is value added by circb specifically?); continue adding testing and documentation
+
 ## Features
 
 * TKTK
