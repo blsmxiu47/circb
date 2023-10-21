@@ -23,7 +23,7 @@ static const char *const circb_help =
 	"circb"
 	"\n"
 	"Usage:"
-	"\n  rirc [-h] [[options] ...]"
+	"\n  circb [-h] [[options] ...]"
 	"\n"
 	"\nInfo:"
 	"\n  -h, --help      		Print help message and exit"
@@ -87,7 +87,7 @@ Config parse_args (int argc, char *argv[]) {
 	Config config = init_config();
 	int opt;
 
-    	while((opt = getopt(argc, argv, "h:s:p:u:w:")) > 0) {
+    	while((opt = getopt(argc, argv, "hs:p:u:w:")) > 0) {
         	switch(opt) {
             		case 'h':
 				puts(circb_help);
