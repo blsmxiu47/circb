@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
+// #include <unistd.h>
+#include <getopt.h>
 
 typedef struct {
     char* hostname;
@@ -29,7 +30,7 @@ static const char *const circb_help =
 	"\n  -h, --help      		Print help message and exit"
 	"\n"
 	"\nOptions:"
-	"\n  -c  --config=CONFIG_FILE   Define path to config file containing options"
+	"\n  -c  --config=CONFIG_FILE      Define path to config file containing options"
 	"\n  -s, --server=HOSTNAME     	Set connection hostname"
 	"\n  -p, --port=PORT           	Set connection port"
 	"\n  -w, --password=PASSWORD   	Set IRC password"
@@ -87,7 +88,15 @@ Config parse_args (int argc, char *argv[]) {
 	Config config = init_config();
 	int opt;
 
-    	while((opt = getopt(argc, argv, "hs:p:u:w:")) > 0) {
+	struct option long_opts[] = {
+		{"help", no_argument, 0, 'h'},
+		{"server", required_argument, 0, 's'},
+		{"port", required_argument, 0, 'p'},
+		{"username", required_argument, 0, 'u'},
+		{"password", required_argument, 0, 'w'}
+	};
+
+    	while((opt = getopt_long(argc, argv, "hs:p:u:w:", long_opts, 0)) > 0) {
         	switch(opt) {
             		case 'h':
 				puts(circb_help);
