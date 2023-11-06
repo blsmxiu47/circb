@@ -9,8 +9,10 @@ typedef struct {
     int port;
     char* username;
     char* password;
+    char* nick;
     int username_flag;
     int password_flag;
+    int nick_flag;
 } Config;
 
 Config init_config() {
@@ -19,8 +21,10 @@ Config init_config() {
     config.port = 8080;
     config.username = NULL;
     config.password = NULL;
+    config.nick = NULL;
     config.username_flag = 0;
     config.password_flag = 0;
+    config.nick_flag = 0;
     return config;
 }
 
@@ -38,9 +42,11 @@ static const char *const circb_help =
 	"\n  -s, --server=HOSTNAME     	Set connection hostname"
 	"\n  -p, --port=PORT           	Set connection port"
 	"\n  -u, --username=USERNAME   	Set IRC username"
-	"\n  -w, --password=PASSWORD   	Set IRC password";
+	"\n  -w, --password=PASSWORD   	Set IRC password"
+	"\n  -n, --nick=NICKNAME   	Set IRC nickname";
 
-static const char *const usage_help = "Usage: circb [-h] [-s hostname] [-p port] [-u username] [-w password]";
+
+static const char *const usage_help = "Usage: circb [-h] [-s hostname] [-p port] [-u username] [-w password] [-n nick]";
 
 Config parse_config_file(const char *filename) {
 	FILE* file = fopen(filename, "r");
@@ -77,6 +83,8 @@ Config parse_config_file(const char *filename) {
 			config.username = strdup(value);
 		} else if (strcmp(key, "password") == 0) {
 			config.password = strdup(value);
+		} else if (strcmp(key, "nick") == 0) {
+			config.nick = strdup(value);
 		}
 	}
 
@@ -99,10 +107,11 @@ Config parse_args (int argc, char *argv[]) {
 		{"server", required_argument, 0, 's'},
 		{"port", required_argument, 0, 'p'},
 		{"username", required_argument, 0, 'u'},
-		{"password", required_argument, 0, 'w'}
+		{"password", required_argument, 0, 'w'},
+		{"nick", required_argument, 0, 'n'}
 	};
 
-    	while((opt = getopt_long(argc, argv, "hs:p:u:w:", long_opts, 0)) > 0) {
+    	while((opt = getopt_long(argc, argv, "hs:p:u:w:n:", long_opts, 0)) > 0) {
         	switch(opt) {
             		case 'h':
 				puts(circb_help);
@@ -125,6 +134,10 @@ Config parse_args (int argc, char *argv[]) {
                 		config.password = strdup(optarg);
 				config.password_flag = 1;
                 		break;
+			case 'n':
+				config.nick = strdup(optarg);
+				config.nick_flag = 1;
+				break;
             		default:
                 		fprintf(stderr, usage_help);
                 		exit(EXIT_FAILURE);
@@ -136,7 +149,10 @@ Config parse_args (int argc, char *argv[]) {
 	if (!config.password_flag) {
 		fprintf(stderr, "Error. Missing required argument: password\n");
 	}
-	if (!config.username_flag || !config.password_flag) {
+	if (!config.nick_flag) {
+		fprintf(stderr, "Error. Missing required argument: nick\n");
+	}
+	if (!config.username_flag || !config.password_flag || !config.nick_flag) {
 		puts(usage_help);
 		exit(EXIT_FAILURE);
 	}
@@ -155,6 +171,7 @@ int main(int argc, char *argv[]) {
 	printf("username: %s\n", config.username);
 	// below, safest code ever
 	printf("password!!: %s\n", config.password);
+	printf("nick: %s\n", config.nick);
 	//free(config.hostname);
 	//free(config.username);
 	//free(config.password);
