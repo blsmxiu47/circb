@@ -9,6 +9,8 @@ typedef struct {
     int port;
     char* username;
     char* password;
+    int username_flag;
+    int password_flag;
 } Config;
 
 Config init_config() {
@@ -17,6 +19,8 @@ Config init_config() {
     config.port = 8080;
     config.username = NULL;
     config.password = NULL;
+    config.username_flag = 0;
+    config.password_flag = 0;
     return config;
 }
 
@@ -33,8 +37,10 @@ static const char *const circb_help =
 	"\n  -c  --config=CONFIG_FILE      Define path to config file containing options"
 	"\n  -s, --server=HOSTNAME     	Set connection hostname"
 	"\n  -p, --port=PORT           	Set connection port"
-	"\n  -w, --password=PASSWORD   	Set IRC password"
-	"\n  -u, --username=USERNAME   	Set IRC username";
+	"\n  -u, --username=USERNAME   	Set IRC username"
+	"\n  -w, --password=PASSWORD   	Set IRC password";
+
+static const char *const usage_help = "Usage: circb [-h] [-s hostname] [-p port] [-u username] [-w password]";
 
 Config parse_config_file(const char *filename) {
 	FILE* file = fopen(filename, "r");
@@ -113,15 +119,27 @@ Config parse_args (int argc, char *argv[]) {
                 		break;
             		case 'u':
                 		config.username = strdup(optarg);
+				config.username_flag = 1;
                 		break;
             		case 'w':
                 		config.password = strdup(optarg);
+				config.password_flag = 1;
                 		break;
             		default:
-                		fprintf(stderr, "Usage: %s [-h] [-s hostname] [-p port] [-u username] [-w password]\n", argv[0]);
+                		fprintf(stderr, usage_help);
                 		exit(EXIT_FAILURE);
         	}
     	}
+	if (!config.username_flag) {
+		fprintf(stderr, "Error. Missing required argument: username\n");
+	}
+	if (!config.password_flag) {
+		fprintf(stderr, "Error. Missing required argument: password\n");
+	}
+	if (!config.username_flag || !config.password_flag) {
+		puts(usage_help);
+		exit(EXIT_FAILURE);
+	}
 
 	return config;
 }
@@ -131,13 +149,14 @@ int main(int argc, char *argv[]) {
 	// TODO: Initialization of other components, IO, State, etc.
 	// TODO: logic to start/connect to the server/client with the parsed config
 	
-	printf("Config parameters supplied\n");
+	printf("Config parameters supplied:\n");
 	printf("hostname: %s\n", config.hostname);
 	printf("port: %d\n", config.port);
 	printf("username: %s\n", config.username);
 	// below, safest code ever
 	printf("password!!: %s\n", config.password);
 	free(config.hostname);
-	free(config.username);
-	free(config.password);
+	// TODO: uncomment once these are no longer optional args
+	//free(config.username);
+	//free(config.password);
 }
