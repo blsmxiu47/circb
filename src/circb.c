@@ -155,8 +155,7 @@ int main(int argc, char *argv[]) {
 	printf("username: %s\n", config.username);
 	// below, safest code ever
 	printf("password!!: %s\n", config.password);
-	free(config.hostname);
-	// TODO: uncomment once these are no longer optional args
+	//free(config.hostname);
 	//free(config.username);
 	//free(config.password);
 }
