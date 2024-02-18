@@ -1,1 +1,13 @@
+# Compiled and linked files
 *.o
+client
+server
+channel
+circb
+
+# Environment variables
+.env
+export-env.sh
+
+# VS Code
+.vscode/
