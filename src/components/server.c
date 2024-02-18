@@ -1,4 +1,3 @@
-// Sample TCP Server
 #include <netinet/in.h>
 #include <poll.h>
 #include <pthread.h>
@@ -7,6 +6,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+
 #include "../../include/server.h"
 
 #define PORT 8080
@@ -27,22 +27,18 @@ void handle_client(int client_fd) {
 	buffer[bytes_read] = '\0';
 	printf("Received: %s\n", buffer);
 
-    	// TODO: add logic to process the message. I believe this is 
+    // TODO: add logic to process the message. I believe this is 
 	// ultimately where the magic will happen in terms of proccessing 
 	// commands that the user through the client is sending to the server
-    	// For now, simply just echoing back the message for the sake
+    // For now, simply just echoing back the message for the sake
 	// of testing
-    	send(client_fd, buffer, bytes_read, 0);
+    send(client_fd, buffer, bytes_read, 0);
 	printf("Echoed message\n");
 }
 
 // from server.h
 Server* init_server(char* hostname, int port) {
     Server *server = malloc(sizeof(Server));
-    // malloc returns a pointer to the block of memory that has been allocated for dynamic memory 
-    // usage (as opposed to static or automatic)
-    // With dynamic memory usage, when the memory is no longer needed, the pointer 
-    // is passed to free which deallocates the memory so that it can be used for other purposes. 
     // Using dynamic memory allocation it is possible to fail to allocate memory,
     // for instance if there is simply not enough memory available
     // TODO: handle this issue more tactfully I assume.
@@ -50,19 +46,11 @@ Server* init_server(char* hostname, int port) {
         perror("Failed to allocate memory for Server");
         exit(EXIT_FAILURE);
     }
-    // The strdup() function returns a pointer to a new string which is a duplicate of the 
-    // string s.  Memory for the new string is obtained with malloc(3), and can 
-    // be freed with free(3).
-    // Essentially, strdup() does 2 things: 1. allocates enough memory to hold the contents
-    // of the string pointed to by hostname, including the null terminator, and 2. copies 
-    // the contents of the string hostname into this newly allocated memory block.
-    // So, the overall effect of server->hostname = strdup(hostname); is that the 
-    // hostname string is duplicated in memory, and the Server structure now holds a
-    // pointer to this duplicate, allowing the server structure to safely hold and 
-    // manage its own copy of the hostname.
-    server->hostname = strdup(hostname); // Remember to free this during server shutdown.
-    // And port is simply assigned to the port member of server
+	// TODO: Remember to free this during server shutdown.
+    server->hostname = strdup(hostname);
     server->port = port;
+	printf("Logging server->hostname: %s\n", server->hostname);
+	printf("Logging server->port: %d\n", server->port);
     // Initialize other server state information here.
     // TODO: tktk
     return server;

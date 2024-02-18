@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-// #include <unistd.h>
 #include <getopt.h>
+
+#include "../include/server.h"
 
 typedef struct {
     char* hostname;
@@ -162,8 +163,6 @@ Config parse_args (int argc, char *argv[]) {
 
 int main(int argc, char *argv[]) {
 	Config config = parse_args(argc, argv);
-	// TODO: Initialization of other components, IO, State, etc.
-	// TODO: logic to start/connect to the server/client with the parsed config
 	
 	printf("Config parameters supplied:\n");
 	printf("hostname: %s\n", config.hostname);
@@ -172,6 +171,13 @@ int main(int argc, char *argv[]) {
 	// below, safest code ever
 	printf("password!!: %s\n", config.password);
 	printf("nick: %s\n", config.nick);
+	
+	// TODO: Initialization of other components, IO, State, etc.
+
+
+	// TODO: logic to start/connect to the server/client with the parsed config
+	
+	
 	//free(config.hostname);
 	//free(config.username);
 	//free(config.password);
