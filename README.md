@@ -1,6 +1,8 @@
-# circb: An IRC (Internet Relay Chat) system, written in C
+# circb
 
-circb is an IRC network, with support for arbitrarily many servers, channels, and users, and following [the IRC protocol (RFC 1459)](https://www.rfc-editor.org/rfc/rfc1459.html).
+## Description
+
+circb is an IRC (Internet Relay Chat) network written in C, with support for arbitrarily many servers, channels, and users, and following [the IRC protocol (RFC 1459)](https://www.rfc-editor.org/rfc/rfc1459.html).
 
 For a more robust chat app and pleasant user experience (including UI), an app built on top of circb is in development (but will link here when it is live).
 
